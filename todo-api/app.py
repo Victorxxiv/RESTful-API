@@ -1,5 +1,7 @@
-from flask import Flask, jsonify, abort, make_response, request
-from flask import url_for
+from flask import Flask, jsonify, abort, make_response, request, url_for
+from flask_httpauth import HTTPBasicAuth
+
+auth = HTTPBasicAuth()
 
 app = Flask(__name__)
 
@@ -27,8 +29,19 @@ tasks = [
     }
 ]
 
+@auth.verify_password
+def verify_password(username, password):
+    if username == 'Victor' and password == 'python':
+        return True
+    return False
+
+@auth.error_handler
+def unauthorized():
+    return make_response(jsonify({'error': 'Unauthorized access'}), 401)
+
 # GET /tasks
 @app.route('/todo/api/v1.0/tasks', methods=['GET'])
+@auth.login_required
 def get_tasks():
     return jsonify({'tasks': [make_public_task(task) for task in tasks]})
 
