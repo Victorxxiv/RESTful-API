@@ -13,13 +13,6 @@ class Resource(db.Model):
     def __repr__(self):
         return f"<Resource {self.name}>"
 
-@app.route('/api/v1/resource', methods=['GET'])
-def create_resource():
-    data = request.get_json()
-    if not data:
-        return jsonify({'error': 'No input data provided'}), 400
-    # Process data
-    return jsonify({'message': 'Resource created', 'data': data}), 201
 
 @app.route('/api/v1/resource', methods=['POST'])
 def create_resource():
@@ -35,7 +28,7 @@ def get_resources():
     resources_list = [{"id": r.id, "name": r.name, "description": r.description} for r in resources]
     return jsonify(resources_list), 200
 
-@app.route('/api/v1/resource/<int:id', methods=['PUT'])
+@app.route('/api/v1/resource/<int:id>', methods=['PUT'])
 def update_resource(id):
     resource = Resource.query.get(id)
     if resource:
