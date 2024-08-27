@@ -1,6 +1,9 @@
 from flask import Flask, request, jsonify, make_response, abort, url_for
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+db = SQLAlchemy(app)
 
 @app.route('/api/v1/resource', methods=['GET'])
 def create_resource():
