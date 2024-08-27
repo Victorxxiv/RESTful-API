@@ -2,6 +2,8 @@ from functools import wraps
 from flask import Flask, request, jsonify, make_response, abort, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required
+import stripe
+from marshmallow import Schema, fields
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
@@ -9,6 +11,8 @@ db = SQLAlchemy(app)
 
 app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key'
 jwt = JWTManager(app)
+
+stripe.api_key = "your_secret_key"
 
 def require_auth(f):
     @wraps(f)
@@ -26,6 +30,33 @@ class Resource(db.Model):
 
     def __repr__(self):
         return f"<Resource {self.name}>"
+
+class ResourrceSchema(Schema):
+    id = fields.Int(dump_only=True)
+    name = fields.Str(required=True)
+    description = fields.Str()
+
+class Resource:
+    def __init__(self, name, description):
+        self.id = None
+        self.name = name
+        self.description = description
+
+# Serialize example
+@app.route('/serialize', methods=['POST'])
+def serialize():
+    resource = Resource(name="Example", description="Example description")
+    serialized_data = resource_schema.dump(resource)
+    return jsonify(serialized_data)
+
+# Validation example
+@app.route('/validate', methods=['POST'])
+def validate_data():
+    input_data = request.get_json()
+    errors = resource_schema.validate(input_data)
+    if errors:
+        return jsonify(errors), 400
+    return jsonify({"message": "Data is valid!"})
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -75,6 +106,18 @@ def delete_resource(id):
 @require_auth
 def protected_resource():
     return jsonify({"message": "This is a protected resource"})
+
+# Stripe API for payment processing
+@app.route('/api/v1/charge', methods=['POST'])
+def create_charge():
+    data = request.get_json()
+    charge = stripe.Charge.create(
+        amount=data['amount'],
+        currency='usd',
+        source=data['token'],
+        description='Charge for service'
+    )
+    return jsonify(charge), 201
 
 @app.errorhandler(404)
 def resource_not_found(e):
