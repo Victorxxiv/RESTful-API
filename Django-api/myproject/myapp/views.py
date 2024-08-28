@@ -3,6 +3,7 @@ from rest_framework.views import APIView, generics
 from rest_framework.response import Response
 from .models import Post
 from .serializers import PostSerializer
+from rest_framework.permissions import IsAuthenticated
 
 # Create your views here
 class PostList(APIView):
@@ -23,3 +24,4 @@ class PostList(APIView):
 class PostListCreate(generics.ListCreateAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
+    permission_classes = [IsAuthenticated]
